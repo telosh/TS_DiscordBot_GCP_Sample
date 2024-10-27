@@ -12,6 +12,7 @@ RUN npm install --only=production
 
 # 環境変数を設定
 ENV NODE_ENV=production
+ENV PORT=8080
 
 # アプリケーションのソースコードをコンテナにコピー
 COPY . .
