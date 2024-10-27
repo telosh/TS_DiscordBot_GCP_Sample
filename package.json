@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
+    "clean": "rm -rf build/",
+    "prebuild": "npm run clean",
+    "build": "tsc -p . && cp package.json build/",
     "compile": "tsc -p .",
     "dev": "npm run compile && node build/deploy-commands.js&& node build/main.js",
     "start": "npm run build && node build/deploy-commands.js && node build/main.js"

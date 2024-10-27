@@ -25,8 +25,6 @@ function getRequiredEnvVar(name: string): string {
 
 // 定数の定義
 const token = getRequiredEnvVar('DISCORD_TOKEN');
-const TABLE_NAME = getRequiredEnvVar('SUPABASE_TABLE_NAME');
-// const CONSOLE_CHANNEL_ID = getRequiredEnvVar('CONSOLE_CHANNEL_ID');
 
 // コマンドインターフェース
 interface Command {
