@@ -12,7 +12,6 @@ RUN npm install
 COPY . .
 # TypeScript ファイルをビルド
 RUN npm run build
-
-
+EXPOSE 8080
 # サーバーを起動
 CMD ["npm", "start"]
