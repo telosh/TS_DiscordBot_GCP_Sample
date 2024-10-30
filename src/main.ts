@@ -1,16 +1,21 @@
 import dotenv from 'dotenv';
 dotenv.config();
+import express, { Request, Response } from 'express';
+import { verifyKeyMiddleware } from 'discord-interactions';
 import { Client, Message, Events, GatewayIntentBits, ActivityType, CommandInteraction, ChatInputCommandInteraction, InteractionType, InteractionResponseType } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 
 import registerCommands from './deploy-commands'; registerCommands();
 
-
-//render用にexpressでサーバーを立てる
-import express from 'express';
 const app = express();
 const PORT = process.env.PORT || 8080;
+const discordPublicKey = process.env.DISCORD_PUBLIC_KEY;
+
+// Discord パブリックキーの存在確認
+if (!discordPublicKey) {
+    throw new Error("Discordのパブリックキーが環境変数として設定されていません。");
+  }
 
 // 環境変数の型安全な取得関数
 function getRequiredEnvVar(name: string): string {
@@ -63,30 +68,33 @@ client.once(Events.ClientReady, async (c: Client) => {
 });
 
 
-(async () => { // コマンドの読み込み
+// コマンドの読み込み関数
+const loadCommands = async () => {
     const commandsPath = path.join(__dirname, 'commands');
     
-    // コマンドファイルの取得
+    // コマンドファイルの読み込み
     const commandFiles = fs.readdirSync(commandsPath).filter(file => 
         file.endsWith('.js') || file.endsWith('.ts') || file.endsWith('.cjs')
     );
-
-    // 各コマンドファイルを処理
+  
+    // 各コマンドファイルの処理
     for (const file of commandFiles) {
-        try {
-            const filePath = path.join(commandsPath, file);
-            const command = await import(filePath);
-            
-            // コマンドの名前を確認し、登録
-            if (command.default?.data?.name) {
-                console.log(`${command.default.data.name}を登録します。`);
-                commands.set(command.default.data.name, command.default);
-            }
-        } catch (error) {
-            console.error(`コマンド読み込み中にエラーが発生しました (${file}):`, error);
+      try {
+        const filePath = path.join(commandsPath, file);
+        const command = await import(filePath);
+  
+        // コマンドの名前を確認し、Mapに登録
+        if (command.default?.data?.name) {
+          commands.set(command.default.data.name, command.default);
+          console.log(`${command.default.data.name}コマンドを登録しました。`);
+        } else {
+          console.warn(`コマンド名が指定されていないファイル: ${file}`);
         }
+      } catch (error) {
+        console.error(`コマンド読み込み中にエラーが発生しました (${file}):`, error);
+      }
     }
-})();
+  };
 
 // イベントリスナー
 
@@ -243,15 +251,26 @@ client.login(token).catch(error => {
     process.exit(1);
 });
 
-
-import { Request, Response } from 'express';
-import { verifyKeyMiddleware } from 'discord-interactions';
-
-const discordPublicKey = getRequiredEnvVar('DISCORD_PUBLIC_KEY');
+// Discordインタラクションエンドポイント
 app.post('/interactions', verifyKeyMiddleware(discordPublicKey), async (req: Request, res: Response) => {
-    
-  });
+    const interaction = req.body;
   
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    // コマンドの確認と実行
+    const command = commands.get(interaction.data?.name);
+    if (command) {
+      try {
+        await command.execute(interaction);
+      } catch (error) {
+        console.error('コマンド実行中にエラーが発生しました:', error);
+        res.status(500).send({ error: 'コマンド実行中にエラーが発生しました。' });
+      }
+    } else {
+      res.status(404).send({ error: 'コマンドが見つかりません。' });
+    }
+  });
+
+// サーバーの起動
+app.listen(PORT, async () => {
+    await loadCommands();
+    console.log(`サーバーはポート${PORT}で起動中です。`);
   });
