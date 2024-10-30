@@ -8,5 +8,11 @@ COPY package*.json ./
 RUN npm install
 # アプリケーションのソースコードをコンテナにコピー
 COPY . .
-# アプリケーションの起動コマンドを指定
-CMD ["npm", "run", "start"]
+# TypeScript ファイルをビルド
+RUN npm run build
+
+# ポートを公開
+EXPOSE 8080
+
+# サーバーを起動
+CMD ["node", "build/main.js"]
