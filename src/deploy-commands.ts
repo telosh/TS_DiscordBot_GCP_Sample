@@ -67,4 +67,4 @@ const registerCommands = async (): Promise<void> => {
     }
 };
 
-registerCommands();
+export default registerCommands;

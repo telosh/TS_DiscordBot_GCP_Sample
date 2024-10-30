@@ -4,6 +4,9 @@ import { Client, Message, Events, GatewayIntentBits, ActivityType, CommandIntera
 import fs from 'fs';
 import path from 'path';
 
+import registerCommands from './deploy-commands';
+registerCommands();
+
 //render用にexpressでサーバーを立てる
 import express, { Request, Response } from 'express';
 const app = express();
