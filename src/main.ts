@@ -267,7 +267,14 @@ app.post('/interactions', verifyKeyMiddleware(discordPublicKey), async (req: Req
     } else {
       res.status(404).send({ error: 'コマンドが見つかりません。' });
     }
-  });
+});
+
+const myConfig = function (req: Request & { discordClient?: Client<boolean> }, res: Response, next: () => void) {
+    req.discordClient = client;
+    next()
+};
+
+app.use((req, res, next) => myConfig(req as Request & { discordClient?: Client<boolean> }, res, next));
 
 // サーバーの起動
 app.listen(PORT, async () => {
