@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 # package.json と package-lock.json をコピーして依存関係をインストール
 COPY package*.json ./
 # 依存関係のインストール（production環境用）
-RUN npm install --only=production
+RUN npm install
 # アプリケーションのソースコードをコンテナにコピー
 COPY . .
 # アプリケーションの起動コマンドを指定
