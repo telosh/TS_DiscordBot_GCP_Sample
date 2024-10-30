@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import { Client, Message, Events, GatewayIntentBits, ActivityType, CommandInteraction, ChatInputCommandInteraction } from 'discord.js';
+import { Client, Message, Events, GatewayIntentBits, ActivityType, CommandInteraction, ChatInputCommandInteraction, InteractionType, InteractionResponseType } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -11,13 +11,6 @@ import registerCommands from './deploy-commands'; registerCommands();
 import express from 'express';
 const app = express();
 const PORT = process.env.PORT || 8080;
-app.get('/', (req, res) => {
-    res.send('Hello, Cloud Run!');
-  });
-  
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
 
 // 環境変数の型安全な取得関数
 function getRequiredEnvVar(name: string): string {
@@ -250,3 +243,15 @@ client.login(token).catch(error => {
     process.exit(1);
 });
 
+
+import { Request, Response } from 'express';
+import { verifyKeyMiddleware } from 'discord-interactions';
+
+const discordPublicKey = getRequiredEnvVar('DISCORD_PUBLIC_KEY');
+app.post('/interactions', verifyKeyMiddleware(discordPublicKey), async (req: Request, res: Response) => {
+    
+  });
+  
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
