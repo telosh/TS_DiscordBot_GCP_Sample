@@ -8,14 +8,12 @@ import registerCommands from './deploy-commands'; registerCommands();
 
 
 //render用にexpressでサーバーを立てる
-import express, { Request, Response } from 'express';
+import express from 'express';
 const app = express();
 const PORT = process.env.PORT || 8080;
-app.get('/', (req: Request, res: Response) => {
-    res.send('Hello telosh World!');
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
-
-app.listen(PORT);
 
 // 環境変数の型安全な取得関数
 function getRequiredEnvVar(name: string): string {
