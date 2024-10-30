@@ -3,7 +3,7 @@ import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from '
 const command = {
 	data: new SlashCommandBuilder()
 		.setName('userlist')
-		.setDescription('サーバーの人数統計表を表示します'),
+		.setDescription('testサーバーの人数統計表を表示します'),
     async execute(interaction :  ChatInputCommandInteraction) {
         if (!interaction.guild) {
             await interaction.reply('このコマンドはサーバー内でのみ使用できます。');
