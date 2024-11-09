@@ -133,30 +133,30 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
             let responseContent = '';
             switch (command) {
-                // case 'contactForm':
-                //     { 
-                //         const title = interaction.fields.getTextInputValue(`contact_title`);
-                //         const body = interaction.fields.getTextInputValue(`contact_body`);
+                case 'contactForm':
+                    { 
+                        const title = interaction.fields.getTextInputValue(`contact_title`);
+                        const body = interaction.fields.getTextInputValue(`contact_body`);
 
-                //         // DBのcontactsテーブルにデータを挿入
-                //         const { error } = await supabase.from('contacts').insert([
-                //             { 
-                //                 inquiry_text: body,
-                //                 user_id: Number(interaction.user.id), 
-                //                 handler_id: 344833367348609000, 
-                //                 status_id: 1, 
-                //                 inquiry_title: title 
-                //             }]);
+                        // DBのcontactsテーブルにデータを挿入
+                        const { error } = await supabase.from('contacts').insert([
+                            { 
+                                inquiry_text: body,
+                                user_id: Number(interaction.user.id), 
+                                handler_id: 344833367348609000, 
+                                status_id: 1, 
+                                inquiry_title: title 
+                            }]);
                             
-                //         if (error) {
-                //             console.error('DB挿入中にエラーが発生しました:', error);
-                //         }
+                        if (error) {
+                            console.error('DB挿入中にエラーが発生しました:', error);
+                        }
 
 
-                //         responseContent = 'お問い合わせを受け付けました。';
-                //         console.log(`お問い合わせ: タイトル: ${title}, 本文: ${body}`);
-                //         break; 
-                //     }
+                        responseContent = 'お問い合わせを受け付けました。';
+                        console.log(`お問い合わせ: タイトル: ${title}, 本文: ${body}`);
+                        break; 
+                    }
                 // case 'shareRecipe':
                 //     {
                 //         responseContent = 'レシピを投稿しました。';
