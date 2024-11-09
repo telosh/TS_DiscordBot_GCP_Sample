@@ -157,41 +157,41 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 //         console.log(`お問い合わせ: タイトル: ${title}, 本文: ${body}`);
                 //         break; 
                 //     }
-                case 'shareRecipe':
-                    {
-                        responseContent = 'レシピを投稿しました。';
-                        console.log(`レシピ: タイトル: , 本文: `);        
-                        break;
-                    }
-                case 'shareEvent':
-                    {
-                        responseContent = 'イベントを投稿しました。';
-                        console.log(`イベント: タイトル: , 本文:`);
-                        break;
-                    }
-                case 'guild_poll':
-                    {
-                        responseContent = 'アンケートを投稿しました。';
-                        console.log(`アンケート: タイトル: , 本文: `);
-                        break;
-                    }
-                case 'report_user':
-                    {
-                        responseContent = '通報を受け付けました。';
-                        console.log(`通報: タイトル: , 本文: `);
-                        break;
-                    }
-                case 'lottery_join':
-                    {
-                        responseContent = '抽選に参加登録しました。';
-                        console.log(`通報: タイトル: , 本文: `);
-                        break;
-                    }
-                default:
-                    {
-                        console.error('不明なコマンドです。');
-                        return;
-                    }
+                // case 'shareRecipe':
+                //     {
+                //         responseContent = 'レシピを投稿しました。';
+                //         console.log(`レシピ: タイトル: , 本文: `);        
+                //         break;
+                //     }
+                // case 'shareEvent':
+                //     {
+                //         responseContent = 'イベントを投稿しました。';
+                //         console.log(`イベント: タイトル: , 本文:`);
+                //         break;
+                //     }
+                // case 'guild_poll':
+                //     {
+                //         responseContent = 'アンケートを投稿しました。';
+                //         console.log(`アンケート: タイトル: , 本文: `);
+                //         break;
+                //     }
+                // case 'report_user':
+                //     {
+                //         responseContent = '通報を受け付けました。';
+                //         console.log(`通報: タイトル: , 本文: `);
+                //         break;
+                //     }
+                // case 'lottery_join':
+                //     {
+                //         responseContent = '抽選に参加登録しました。';
+                //         console.log(`通報: タイトル: , 本文: `);
+                //         break;
+                //     }
+                // default:
+                //     {
+                //         console.error('不明なコマンドです。');
+                //         return;
+                //     }
             }
 
             const response = { content: responseContent, ephemeral: true };
@@ -215,23 +215,44 @@ client.on(Events.InteractionCreate, async (interaction) => {
         switch (button) {
             case 'welcome_button':
                 {
-                    // 押したユーザーにロールを付与
-                    const guild = interaction.guild;
-                    if (!guild) {
-                        console.error('ギルドが見つかりません。');
-                        return;
+                    try {
+                        // 押したユーザーにロールを付与
+                        const guild = interaction.guild;
+                        if (!guild) {
+                            console.error('ギルドが見つかりません。');
+                            break;
+                        }
+
+                         // サーバーオーナーのIDを取得
+                        const ownerId = guild.ownerId;
+                        const member = guild.members.cache.get(interaction.user.id);
+
+                        // 対象がサーバーオーナーならスキップ
+                        if (member && member.id === ownerId) {
+                            console.log("サーバーオーナーには役職を付与しません。");
+                            responseContent = 'サーバーオーナーには役職を付与しません。';
+                            break;
+                        }
+
+                        const role = guild.roles.cache.find(role => role.name === 'Member');
+
+                        if (member && role) {
+                            if (member.roles.cache.has(role.id)) {
+                                responseContent = `${interaction.user.username}さん、すでに「${role.name}」ロールが付与されています。`;
+                                console.log(`ユーザー ${interaction.user.username} はすでにロール「${role.name}」を持っています。`);
+                            } else {
+                                await member.roles.add(role);
+                                responseContent = `${interaction.user.username}さん、ようこそ！`;
+                                console.log(`ロール「${role.name}」がユーザー ${interaction.user.username} に追加されました。`);
+                            }
+                        }
+
+                        responseContent = `${interaction.user.username}さん、ようこそ！`;
+                        console.log('ボタンが押されました。');
+                    } catch (error) {
+                        console.error('ロール付与中にエラーが発生しました:', error);
+                        responseContent = 'ロール付与中にエラーが発生しました。';
                     }
-
-                    const role = guild.roles.cache.find(role => role.name === 'Member');
-
-                    const member = guild.members.cache.get(interaction.user.id);
-                    if (member && role) {
-                        await member.roles.add(role);
-                        console.log(`ロール「${role.name}」がユーザー ${interaction.user.username} に追加されました。`);
-                    }
-
-                    responseContent = `${interaction.user.username}さん、ようこそ！`;
-                    console.log('ボタンが押されました。');
                     break;
                 }
             default:
@@ -244,11 +265,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const response = { content: responseContent, ephemeral: true };
         await interaction.reply(response);
     } 
-});
-
-client.login(token).catch(error => {
-    console.error('ログインに失敗しました:', error);
-    process.exit(1);
 });
 
 // Discordインタラクションエンドポイント
@@ -281,3 +297,8 @@ app.listen(PORT, async () => {
     await loadCommands();
     console.log(`サーバーはポート${PORT}で起動中です。`);
   });
+
+  client.login(token).catch(error => {
+    console.error('ログインに失敗しました:', error);
+    process.exit(1);
+});
