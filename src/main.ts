@@ -1,16 +1,19 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import express, { Request, Response } from 'express';
-import { verifyKeyMiddleware } from 'discord-interactions';
+// import { verifyKeyMiddleware } from 'discord-interactions';
 import { Client, Message, Events, GatewayIntentBits, ActivityType, CommandInteraction, ChatInputCommandInteraction, InteractionType, InteractionResponseType } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
+import { SupabaseClient } from '@supabase/supabase-js';
+import supabase from './DBclient';
 
 import registerCommands from './deploy-commands'; registerCommands();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 const discordPublicKey = process.env.DISCORD_PUBLIC_KEY;
+
 
 // Discord パブリックキーの存在確認
 if (!discordPublicKey) {
@@ -28,6 +31,7 @@ function getRequiredEnvVar(name: string): string {
 
 // 定数の定義
 const token = getRequiredEnvVar('DISCORD_TOKEN');
+const TABLE_NAME = getRequiredEnvVar('SUPABASE_TABLE_NAME');
 
 // コマンドインターフェース
 interface Command {
@@ -58,10 +62,24 @@ const client = new Client({
 // コマンドを保持するMap
 const commands: Map<string, Command> = new Map();
 
+async function checkDBConnection(supabase: SupabaseClient): Promise<boolean> {
+    try {
+        const { error } = await supabase.from(TABLE_NAME).select();
+        return !error;
+    } catch {
+        return false;
+    }
+}
 
 client.once(Events.ClientReady, async (c: Client) => {
     if (client.user) {
         client.user.setActivity("🥔を栽培中", { type: ActivityType.Playing });
+    }
+
+    console.log('DB接続を確認中...');
+    if (!await checkDBConnection(supabase)) {
+        console.error('DB接続に失敗しました。');
+        return;
     }
 
     console.log(`準備OKです! ${c.user?.tag}がログインしました。`);
@@ -69,32 +87,30 @@ client.once(Events.ClientReady, async (c: Client) => {
 
 
 // コマンドの読み込み関数
-const loadCommands = async () => {
+(async () => { // コマンドの読み込み
     const commandsPath = path.join(__dirname, 'commands');
     
-    // コマンドファイルの読み込み
+    // コマンドファイルの取得
     const commandFiles = fs.readdirSync(commandsPath).filter(file => 
         file.endsWith('.js') || file.endsWith('.ts') || file.endsWith('.cjs')
     );
-  
-    // 各コマンドファイルの処理
+
+    // 各コマンドファイルを処理
     for (const file of commandFiles) {
-      try {
-        const filePath = path.join(commandsPath, file);
-        const command = await import(filePath);
-  
-        // コマンドの名前を確認し、Mapに登録
-        if (command.default?.data?.name) {
-          commands.set(command.default.data.name, command.default);
-          console.log(`${command.default.data.name}コマンドを登録しました。`);
-        } else {
-          console.warn(`コマンド名が指定されていないファイル: ${file}`);
+        try {
+            const filePath = path.join(commandsPath, file);
+            const command = await import(filePath);
+            
+            // コマンドの名前を確認し、登録
+            if (command.default?.data?.name) {
+                console.log(`${command.default.data.name}を登録します。`);
+                commands.set(command.default.data.name, command.default);
+            }
+        } catch (error) {
+            console.error(`コマンド読み込み中にエラーが発生しました (${file}):`, error);
         }
-      } catch (error) {
-        console.error(`コマンド読み込み中にエラーが発生しました (${file}):`, error);
-      }
     }
-  };
+})();
 
 // イベントリスナー
 
@@ -268,22 +284,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 // Discordインタラクションエンドポイント
-app.post('/interactions', verifyKeyMiddleware(discordPublicKey), async (req: Request, res: Response) => {
-    const interaction = req.body;
+// app.post('/interactions', verifyKeyMiddleware(discordPublicKey), async (req: Request, res: Response) => {
+//     const interaction = req.body;
   
-    // コマンドの確認と実行
-    const command = commands.get(interaction.data?.name);
-    if (command) {
-      try {
-        await command.execute(interaction);
-      } catch (error) {
-        console.error('コマンド実行中にエラーが発生しました:', error);
-        res.status(500).send({ error: 'コマンド実行中にエラーが発生しました。' });
-      }
-    } else {
-      res.status(404).send({ error: 'コマンドが見つかりません。' });
-    }
-});
+//     // コマンドの確認と実行
+//     const command = commands.get(interaction.data?.name);
+//     if (command) {
+//       try {
+//         await command.execute(interaction);
+//       } catch (error) {
+//         console.error('コマンド実行中にエラーが発生しました:', error);
+//         res.status(500).send({ error: 'コマンド実行中にエラーが発生しました。' });
+//       }
+//     } else {
+//       res.status(404).send({ error: 'コマンドが見つかりません。' });
+//     }
+// });
 
 const myConfig = function (req: Request & { discordClient?: Client<boolean> }, res: Response, next: () => void) {
     req.discordClient = client;
@@ -294,11 +310,9 @@ app.use((req, res, next) => myConfig(req as Request & { discordClient?: Client<b
 
 // サーバーの起動
 app.listen(PORT, async () => {
-    await loadCommands();
     console.log(`サーバーはポート${PORT}で起動中です。`);
   });
 
   client.login(token).catch(error => {
     console.error('ログインに失敗しました:', error);
-    process.exit(1);
 });
