@@ -1,13 +1,12 @@
 import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.js';
 import { InstancesClient } from '@google-cloud/compute';
-import e from 'express';
 const projectId = 'minecraft-server-telosh';
 const zone = 'us-central1-a';
 const instace = 'test-instance';
 
-const runServerCommand = {
+const stopServerCommand = {
     data: new SlashCommandBuilder()
-        .setName('run-server')
+        .setName('stop-server')
         .setDescription('Start the VM instance'),
     async execute(interaction: CommandInteraction) {
         const computeClient = new InstancesClient();
@@ -19,21 +18,21 @@ const runServerCommand = {
 
         try {
             const response = await computeClient.start(request);
-            console.log('VM started:', response);
+            console.log('VM Stoped:', response);
             const embed = new EmbedBuilder()
-                .setTitle('VM Started')
-                .setDescription('VMの起動に成功しました。')
+                .setTitle('VM Stoped')
+                .setDescription('VMの停止に成功しました。')
                 .setColor('#00FF00');
             await interaction.reply({ embeds: [embed] });
         } catch (error) {
-            console.error('VM start failed:', error);
+            console.error('VM stop failed:', error);
             const embed = new EmbedBuilder()
                 .setTitle('Error')
-                .setDescription(`VMの起動に失敗しました。`)
+                .setDescription(`VMの停止に失敗しました。`)
                 .setColor('#FF0000');
             await interaction.reply({ embeds: [embed] });
         }
     },
 };
 
-export default runServerCommand;
+export default stopServerCommand;
