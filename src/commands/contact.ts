@@ -15,7 +15,7 @@ dotenv.config();
 
 const command = {
     data: new SlashCommandBuilder()
-        .setName('contact_v2')
+        .setName('contact')
         .setDescription('お問い合わせフォームを表示します。'),
     
     async execute(interaction: CommandInteraction) {
