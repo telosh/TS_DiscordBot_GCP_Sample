@@ -17,7 +17,7 @@ const stopServerCommand = {
         }
 
         try {
-            const response = await computeClient.start(request);
+            const response = await computeClient.stop(request);
             console.log('VM Stoped:', response);
             const embed = new EmbedBuilder()
                 .setTitle('VM Stoped')
